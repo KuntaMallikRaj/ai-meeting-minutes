@@ -39,7 +39,7 @@ Frontend (React-like)     Backend (Flask + AI)
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/ai-meeting-minutes.git
+git clone https://github.com/KuntaMallikRaj/ai-meeting-minutes.git
 cd ai-meeting-minutes
 ```
 
@@ -227,8 +227,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ai-meeting-minutes/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ai-meeting-minutes/discussions)
+- **Issues**: [GitHub Issues](https://github.com/KuntaMallikRaj/ai-meeting-minutes/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/KuntaMallikRaj/ai-meeting-minutes/discussions)
 - **Documentation**: Check the `/docs` folder
 
 ## 🎉 Success Stories
