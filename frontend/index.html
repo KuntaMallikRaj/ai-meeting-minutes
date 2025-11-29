@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Minutes Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1><i class="fas fa-brain"></i> AI Meeting Minutes</h1>
+                <p>A basic demo by mallik</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Navigation Tabs -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="showTab('upload')">
+                <i class="fas fa-upload"></i> Upload Meeting
+            </button>
+            <button class="tab-btn" onclick="showTab('search')">
+                <i class="fas fa-search"></i> Search Meetings
+            </button>
+            <button class="tab-btn" onclick="showTab('summarize')">
+                <i class="fas fa-file-alt"></i> Summarize
+            </button>
+            <button class="tab-btn" onclick="showTab('split')">
+                <i class="fas fa-cut"></i> Split Text
+            </button>
+        </div>
+
+        <!-- Upload Meeting Tab -->
+        <div id="upload" class="tab-content active">
+            <div class="card">
+                <h2><i class="fas fa-upload"></i> Upload New Meeting</h2>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label for="meetingTitle">Meeting Title</label>
+                        <input type="text" id="meetingTitle" placeholder="e.g., Weekly Team Standup" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="meetingTranscript">Meeting Transcript</label>
+                        <textarea id="meetingTranscript" rows="10" placeholder="Paste your meeting transcript here..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-upload"></i> Upload Meeting
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search Meetings Tab -->
+        <div id="search" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-search"></i> Search Meetings</h2>
+                <form id="searchForm">
+                    <div class="form-group">
+                        <label for="searchQuery">Search Query</label>
+                        <input type="text" id="searchQuery" placeholder="e.g., action items, budget discussion, next steps..." required>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </form>
+                <div id="searchResults" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Summarize Tab -->
+        <div id="summarize" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-file-alt"></i> Generate Summary</h2>
+                <form id="summarizeForm">
+                    <div class="form-group">
+                        <label for="summaryText">Meeting Content</label>
+                        <textarea id="summaryText" rows="8" placeholder="Paste meeting content to summarize..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-magic"></i> Generate Summary
+                    </button>
+                </form>
+                <div id="summaryResults" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Split Text Tab -->
+        <div id="split" class="tab-content">
+            <div class="card">
+                <h2><i class="fas fa-cut"></i> Split Long Text</h2>
+                <form id="splitForm">
+                    <div class="form-group">
+                        <label for="splitText">Text to Split</label>
+                        <textarea id="splitText" rows="8" placeholder="Paste long text to split into chunks..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-cut"></i> Split Text
+                    </button>
+                </form>
+                <div id="splitResults" class="results-container"></div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner">
+                <i class="fas fa-brain fa-spin"></i>
+                <p>AI is processing your request...</p>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast" class="toast"></div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 AI Meeting Minutes - Powered by Hugging Face Models</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

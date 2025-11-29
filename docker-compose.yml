@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  ai-meeting-minutes:
+    build: .
+    container_name: ai-meeting-minutes
+    ports:
+      - "3000:3000"   # Frontend
+      - "8001:8001"   # Backend API
+    volumes:
+      - ai_data:/app/data
+      - ai_db:/app/backend/chroma_db
+    environment:
+      - FLASK_ENV=production
+      - PYTHONPATH=/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  ai_data:
+    driver: local
+  ai_db:
+    driver: local

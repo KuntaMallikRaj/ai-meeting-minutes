@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Meeting Minutes Generator</title>
+    <style>
+        /* Embedded CSS to avoid loading issues */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tab-container {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .tab-btn:hover {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .result-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 1001;
+            max-width: 300px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            background: linear-gradient(135deg, #00c851, #00a000);
+        }
+
+        .toast.error {
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+        }
+
+        @media (max-width: 768px) {
+            .tab-container {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧠 AI Meeting Minutes</h1>
+            <p>Powered by Hugging Face - Completely Free & Private</p>
+        </header>
+
+        <main>
+            <!-- Navigation Tabs -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="showTab('upload')">📝 Upload Meeting</button>
+                <button class="tab-btn" onclick="showTab('search')">🔍 Search Meetings</button>
+                <button class="tab-btn" onclick="showTab('summarize')">📊 Summarize</button>
+                <button class="tab-btn" onclick="showTab('split')">✂️ Split Text</button>
+            </div>
+
+            <!-- Upload Meeting Tab -->
+            <div id="upload" class="tab-content active">
+                <div class="card">
+                    <h2>📝 Upload New Meeting</h2>
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label for="meetingTitle">Meeting Title</label>
+                            <input type="text" id="meetingTitle" placeholder="e.g., Weekly Team Standup" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="meetingTranscript">Meeting Transcript</label>
+                            <textarea id="meetingTranscript" rows="10" placeholder="Paste your meeting transcript here..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">📤 Upload Meeting</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Search Meetings Tab -->
+            <div id="search" class="tab-content">
+                <div class="card">
+                    <h2>🔍 Search Meetings</h2>
+                    <form id="searchForm">
+                        <div class="form-group">
+                            <label for="searchQuery">Search Query</label>
+                            <input type="text" id="searchQuery" placeholder="e.g., action items, budget discussion..." required>
+                        </div>
+                        <button type="submit" class="btn-primary">🔍 Search</button>
+                    </form>
+                    <div id="searchResults" class="results-container"></div>
+                </div>
+            </div>
+
+            <!-- Summarize Tab -->
+            <div id="summarize" class="tab-content">
+                <div class="card">
+                    <h2>📊 Generate Summary</h2>
+                    <form id="summarizeForm">
+                        <div class="form-group">
+                            <label for="summaryText">Meeting Content</label>
+                            <textarea id="summaryText" rows="8" placeholder="Paste meeting content to summarize..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">✨ Generate Summary</button>
+                    </form>
+                    <div id="summaryResults" class="results-container"></div>
+                </div>
+            </div>
+
+            <!-- Split Text Tab -->
+            <div id="split" class="tab-content">
+                <div class="card">
+                    <h2>✂️ Split Long Text</h2>
+                    <form id="splitForm">
+                        <div class="form-group">
+                            <label for="splitText">Text to Split</label>
+                            <textarea id="splitText" rows="8" placeholder="Paste long text to split..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn-primary">✂️ Split Text</button>
+                    </form>
+                    <div id="splitResults" class="results-container"></div>
+                </div>
+            </div>
+
+            <!-- Toast Notifications -->
+            <div id="toast" class="toast"></div>
+        </main>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://127.0.0.1:8001';
+
+        // DOM Elements
+        const toast = document.getElementById('toast');
+
+        // Utility Functions
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        // Tab Navigation
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tab buttons
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // API Functions
+        async function makeAPIRequest(endpoint, data) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // Form Handlers
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('meetingTitle').value;
+            const transcript = document.getElementById('meetingTranscript').value;
+            
+            if (!title || !transcript) {
+                showToast('Please fill in both title and transcript', 'error');
+                return;
+            }
+            
+            try {
+                const response = await makeAPIRequest('/ingest/upload', {
+                    title: title,
+                    transcript: transcript
+                });
+                
+                showToast('Meeting uploaded successfully!', 'success');
+                document.getElementById('meetingTitle').value = '';
+                document.getElementById('meetingTranscript').value = '';
+                
+            } catch (error) {
+                showToast('Failed to upload meeting. Please try again.', 'error');
+            }
+        });
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const query = document.getElementById('searchQuery').value;
+            
+            if (!query) {
+                showToast('Please enter a search query', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('searchResults').innerHTML = '<div class="loading">🔍 Searching...</div>';
+                
+                const response = await makeAPIRequest('/search', { query: query });
+                
+                displaySearchResults(response);
+                showToast('Search completed!', 'success');
+                
+            } catch (error) {
+                document.getElementById('searchResults').innerHTML = '<div class="result-item">❌ Search failed. Please try again.</div>';
+                showToast('Search failed. Please try again.', 'error');
+            }
+        });
+
+        document.getElementById('summarizeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const content = document.getElementById('summaryText').value;
+            
+            if (!content) {
+                showToast('Please enter content to summarize', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('summaryResults').innerHTML = '<div class="loading">✨ Generating summary...</div>';
+                
+                const response = await makeAPIRequest('/summarize', { content: content });
+                
+                displaySummaryResults(response);
+                showToast('Summary generated!', 'success');
+                
+            } catch (error) {
+                document.getElementById('summaryResults').innerHTML = '<div class="result-item">❌ Summarization failed. Please try again.</div>';
+                showToast('Summarization failed. Please try again.', 'error');
+            }
+        });
+
+        document.getElementById('splitForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const text = document.getElementById('splitText').value;
+            
+            if (!text) {
+                showToast('Please enter text to split', 'error');
+                return;
+            }
+            
+            try {
+                document.getElementById('splitResults').innerHTML = '<div class="loading">✂️ Splitting text...</div>';
+                
+                const response = await makeAPIRequest('/split', { text: text });
+                
+                displaySplitResults(response);
+                showToast('Text split successfully!', 'success');
+                
+            } catch (error) {
+                document.getElementById('splitResults').innerHTML = '<div class="result-item">❌ Text splitting failed. Please try again.</div>';
+                showToast('Text splitting failed. Please try again.', 'error');
+            }
+        });
+
+        // Display Functions
+        function displaySearchResults(response) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!response.results || response.results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="result-item">
+                        <h3>📭 No Results Found</h3>
+                        <p>No meetings found matching your search query. Try uploading some meetings first or using different keywords.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<h3>🔍 Search Results (${response.results.length} found)</h3>`;
+            
+            response.results.forEach((result, index) => {
+                html += `
+                    <div class="result-item">
+                        <h4>Result ${index + 1}</h4>
+                        <p>${result.page_content || result.content || result}</p>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        function displaySummaryResults(response) {
+            const resultsContainer = document.getElementById('summaryResults');
+            
+            let html = '<h3>📊 Summary Results</h3>';
+            
+            if (response.summary) {
+                html += `
+                    <div class="result-item">
+                        <h4>📝 Summary</h4>
+                        <p>${response.summary}</p>
+                    </div>
+                `;
+            }
+            
+            if (response.action_items) {
+                html += `
+                    <div class="result-item">
+                        <h4>✅ Action Items</h4>
+                        <p>${response.action_items}</p>
+                    </div>
+                `;
+            }
+            
+            if (!response.summary && !response.action_items) {
+                html += `
+                    <div class="result-item">
+                        <h4>⚠️ No Summary Generated</h4>
+                        <p>The AI model couldn't generate a summary. This might be because the text is too short.</p>
+                    </div>
+                `;
+            }
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        function displaySplitResults(response) {
+            const resultsContainer = document.getElementById('splitResults');
+            
+            if (!response.chunks || response.chunks.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="result-item">
+                        <h3>📄 No Chunks Created</h3>
+                        <p>The text was too short to split into multiple chunks.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `<h3>✂️ Text Split Results</h3>`;
+            html += `<p><strong>Total chunks created:</strong> ${response.total_chunks}</p>`;
+            
+            response.chunks.forEach((chunk, index) => {
+                html += `
+                    <div class="result-item">
+                        <h4>📄 Chunk ${index + 1} (${chunk.length} characters)</h4>
+                        <p>${chunk}</p>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('AI Meeting Minutes Frontend Loaded');
+            showToast('Welcome! Your AI Meeting Assistant is ready.', 'success');
+            
+            // Check if backend is running
+            fetch(`${API_BASE_URL}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'ok') {
+                        showToast('✅ Connected to AI backend successfully!', 'success');
+                    }
+                })
+                .catch(error => {
+                    showToast('⚠️ Backend not connected. Make sure your server is running on port 8001.', 'error');
+                });
+        });
+    </script>
+</body>
+</html>

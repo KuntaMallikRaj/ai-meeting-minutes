@@ -1,0 +1,14 @@
+flask==2.3.2
+flask-cors
+sqlalchemy>=2.0.25
+langchain==1.0.8
+chromadb==1.3.5
+python-dotenv==1.0.0
+langchain_text_splitters
+transformers
+torch
+sentence-transformers
+langchain-huggingface
+huggingface-hub
+accelerate
+gunicorn==20.1.0
