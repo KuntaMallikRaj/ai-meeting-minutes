@@ -1,4 +1,4 @@
-# 🚀 AI Meeting Minutes Generator
+## 🚀 AI Meeting Minutes Generator
 
 A **completely free** AI-powered meeting minutes generator using **Hugging Face models**. No API keys required, runs entirely on your machine!
 
