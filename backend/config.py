@@ -12,9 +12,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "change-me")
 # Create a free token at https://huggingface.co/settings/tokens and set HF_TOKEN.
 HF_TOKEN = os.environ.get("HF_TOKEN") or os.environ.get("HUGGINGFACEHUB_API_TOKEN")
 
-# Text-generation model used for summaries / Q&A. Overridable via env in case a
-# given model isn't available on your token's inference providers.
-LLM_MODEL = os.environ.get("LLM_MODEL", "HuggingFaceH4/zephyr-7b-beta")
+# Chat model used for summaries / Q&A. Optional: when unset, the service tries a
+# built-in list of common ungated chat models and uses the first one your token's
+# inference providers can serve. Set this to pin a specific model.
+LLM_MODEL = os.environ.get("LLM_MODEL", "")
 # Embedding model used for the Chroma vector store (feature-extraction API).
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
