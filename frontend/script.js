@@ -1,5 +1,7 @@
 // API Configuration
-const API_BASE_URL = 'http://127.0.0.1:8001';
+// Empty string = same origin, so the UI talks to whichever host serves it
+// (localhost in dev, the Render URL in production). No hardcoded host.
+const API_BASE_URL = '';
 
 // DOM Elements
 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -187,8 +189,12 @@ document.getElementById('splitForm').addEventListener('submit', async (e) => {
 // Display Functions
 function displaySearchResults(response) {
     const resultsContainer = document.getElementById('searchResults');
-    
-    if (!response.results || response.results.length === 0) {
+
+    // The API returns { answer, contexts }.
+    const answer = response.answer;
+    const contexts = response.contexts || [];
+
+    if (!answer && contexts.length === 0) {
         resultsContainer.innerHTML = `
             <div class="result-item">
                 <h3><i class="fas fa-info-circle"></i> No Results Found</h3>
@@ -197,21 +203,30 @@ function displaySearchResults(response) {
         `;
         return;
     }
-    
-    let html = `<h3><i class="fas fa-search"></i> Search Results (${response.results.length} found)</h3>`;
-    
-    response.results.forEach((result, index) => {
+
+    let html = '';
+
+    if (answer) {
         html += `
             <div class="result-item">
-                <h4>Result ${index + 1}</h4>
-                <p>${result.page_content || result.content || result}</p>
-                <div class="metadata">
-                    ${result.metadata ? `Score: ${result.metadata.score || 'N/A'}` : ''}
-                </div>
+                <h3><i class="fas fa-robot"></i> Answer</h3>
+                <p>${answer}</p>
             </div>
         `;
-    });
-    
+    }
+
+    if (contexts.length > 0) {
+        html += `<h3><i class="fas fa-search"></i> Source Excerpts (${contexts.length})</h3>`;
+        contexts.forEach((ctx, index) => {
+            html += `
+                <div class="result-item">
+                    <h4>Excerpt ${index + 1}</h4>
+                    <p>${ctx}</p>
+                </div>
+            `;
+        });
+    }
+
     resultsContainer.innerHTML = html;
 }
 
@@ -287,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('Welcome! Your AI Meeting Assistant is ready.', 'info');
     
     // Check if backend is running
-    fetch(`${API_BASE_URL}/`)
+    fetch(`${API_BASE_URL}/health`)
         .then(response => response.json())
         .then(data => {
             if (data.status === 'ok') {
@@ -295,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         })
         .catch(error => {
-            showToast('⚠️ Backend not connected. Make sure your server is running on port 8001.', 'error');
+            showToast('⚠️ Backend not connected.', 'error');
             console.error('Backend connection error:', error);
         });
 });

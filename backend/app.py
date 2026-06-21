@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from routes.ingest import upload_meeting
 from routes.search import search
@@ -8,8 +8,15 @@ from routes.summarize import summarize
 from services.splitter import split_text
 from db import init_db
 
+# The single-page frontend lives alongside the backend. Serving it from Flask
+# means one deployed service hosts both the UI and the API on the same origin.
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "frontend")
+
+
 def create_app():
-    app = Flask(__name__)
+    # static_url_path="" serves frontend/style.css, frontend/script.js, etc. at
+    # the root path (e.g. GET /script.js).
+    app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
     CORS(app)
 
     # Create database tables on startup. Without this the `meetings` table
@@ -18,6 +25,11 @@ def create_app():
 
     @app.route("/", methods=["GET"])
     def home():
+        # Serve the web UI at the root. The JSON status moved to /health.
+        return send_from_directory(FRONTEND_DIR, "index.html")
+
+    @app.route("/health", methods=["GET"])
+    def health():
         return jsonify({
             "service": "AI Meeting Minutes Generator (Flask)",
             "status": "ok"
