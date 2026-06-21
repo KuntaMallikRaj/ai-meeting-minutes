@@ -241,6 +241,41 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
+## ☁️ Cloud Deployment (Render)
+
+The original design loads Hugging Face models **locally** with `torch`, which is
+great for privacy but too heavy for a free cloud instance (torch alone needs
+~2 GB and won't fit in 512 MB of RAM). For cloud deployment, this repo runs the
+LLM and embeddings through the **hosted Hugging Face Inference API** instead — no
+local `torch`, small footprint, free-tier friendly. The trade-off: inference now
+happens on Hugging Face's servers and requires a free API token.
+
+### Deploy on Render
+
+1. Push this repo to GitHub (already done).
+2. In the [Render dashboard](https://dashboard.render.com/), choose **New → Blueprint**
+   and connect this repository. Render reads [`render.yaml`](render.yaml) and
+   creates the web service.
+3. After the first build, open the service's **Environment** tab and set:
+   - `HF_TOKEN` → a free token from <https://huggingface.co/settings/tokens>
+4. (Optional) Override `LLM_MODEL` if your token's inference providers don't
+   serve the default (`HuggingFaceH4/zephyr-7b-beta`).
+
+The web service binds `$PORT`, serves a JSON health check at `/`, and runs under
+gunicorn. **Note:** Render's free tier has an ephemeral filesystem, so the Chroma
+vector store (`CHROMA_DIR=/tmp/chroma_db`) is rebuilt on each deploy/restart —
+fine for a demo, but attach a persistent disk (paid) for durable storage.
+
+### Configuration
+
+| Env var        | Default                              | Purpose                              |
+| -------------- | ------------------------------------ | ------------------------------------ |
+| `HF_TOKEN`     | _unset_ (required for AI endpoints)  | Hugging Face Inference API token     |
+| `LLM_MODEL`    | `HuggingFaceH4/zephyr-7b-beta`       | Text-generation model                |
+| `EMBED_MODEL`  | `sentence-transformers/all-MiniLM-L6-v2` | Embedding model                  |
+| `DATABASE_URL` | `sqlite:///./meetings.db`            | Metadata DB                          |
+| `CHROMA_DIR`   | `<backend>/chroma_store`             | Vector store directory               |
+
 ## 🌟 Star This Project!
 
 If you find this project useful, please give it a ⭐ on GitHub!

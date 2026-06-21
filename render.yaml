@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ai-meeting-minutes
+    runtime: python
+    plan: free
+    healthCheckPath: /
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    envVars:
+      # Set this in the Render dashboard (Environment tab) after the first deploy.
+      # Get a free token at https://huggingface.co/settings/tokens
+      - key: HF_TOKEN
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # Free tier has an ephemeral filesystem; /tmp is writable. The Chroma
+      # store is rebuilt on each deploy/restart (acceptable for a demo).
+      - key: CHROMA_DIR
+        value: /tmp/chroma_db

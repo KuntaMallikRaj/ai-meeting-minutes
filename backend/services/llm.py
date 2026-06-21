@@ -1,46 +1,43 @@
-import os
-from langchain_huggingface import HuggingFacePipeline
+from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-import torch
 
-def get_llm(model: str = "distilgpt2", temperature: float = 0.7):
+from config import LLM_MODEL, HF_TOKEN
+
+# Built once per process and reused. Previously a fresh local torch model was
+# loaded on every request, which was slow and memory-heavy; the hosted
+# Inference API only needs a lightweight client.
+_llm = None
+
+
+def get_llm(model: str = None, temperature: float = 0.7):
     """
-    Initialize Hugging Face LLM pipeline for text generation
-    Using a lightweight, fast model suitable for summarization
+    Return a Hugging Face Inference API text-generation LLM.
+
+    Uses the hosted Inference API instead of a local transformers/torch
+    pipeline, so the service stays small enough for a free cloud tier.
     """
-    # Use a smaller, faster model for better performance
-    model_name = "distilgpt2"  # Fast and lightweight
-    
-    try:
-        # Initialize the pipeline with the model
-        pipe = pipeline(
-            "text-generation",
-            model=model_name,
-            tokenizer=model_name,
-            max_new_tokens=150,  # Reduced for faster responses
-            temperature=temperature,
-            do_sample=True,
-            device=-1,  # Force CPU for compatibility
-            return_full_text=False,
-            pad_token_id=50256  # Explicit pad token for distilgpt2
+    global _llm
+    if _llm is not None:
+        return _llm
+
+    if not HF_TOKEN:
+        raise RuntimeError(
+            "HF_TOKEN is not set. Create a free token at "
+            "https://huggingface.co/settings/tokens and set HF_TOKEN in the "
+            "environment."
         )
-        
-        return HuggingFacePipeline(pipeline=pipe)
-    except Exception as e:
-        print(f"Error loading model {model_name}: {e}")
-        # Fallback with even more basic settings
-        pipe = pipeline(
-            "text-generation",
-            model="gpt2",
-            max_new_tokens=100,
-            temperature=temperature,
-            do_sample=True,
-            device=-1,
-            return_full_text=False
-        )
-        return HuggingFacePipeline(pipeline=pipe)
+
+    _llm = HuggingFaceEndpoint(
+        repo_id=model or LLM_MODEL,
+        task="text-generation",
+        huggingfacehub_api_token=HF_TOKEN,
+        max_new_tokens=256,
+        temperature=temperature,
+        do_sample=True,
+    )
+    return _llm
+
 
 def make_summary_chain():
     prompt = PromptTemplate(
@@ -52,6 +49,7 @@ def make_summary_chain():
         )
     )
     return prompt | get_llm() | StrOutputParser()
+
 
 def make_action_item_chain():
     prompt = PromptTemplate(

@@ -1,13 +1,20 @@
+import os
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from routes.ingest import upload_meeting
 from routes.search import search
 from routes.summarize import summarize
 from services.splitter import split_text
+from db import init_db
 
 def create_app():
     app = Flask(__name__)
     CORS(app)
+
+    # Create database tables on startup. Without this the `meetings` table
+    # never exists and the first /ingest/upload fails with "no such table".
+    init_db()
 
     @app.route("/", methods=["GET"])
     def home():
@@ -47,5 +54,8 @@ def create_app():
     return app
 
 
+app = create_app()
+
 if __name__ == "__main__":
-    create_app().run(host="0.0.0.0", port=8001, debug=True)
+    port = int(os.environ.get("PORT", 8001))
+    app.run(host="0.0.0.0", port=port, debug=False)

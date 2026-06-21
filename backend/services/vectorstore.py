@@ -1,23 +1,37 @@
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
-import os
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
+
+from config import EMBED_MODEL, HF_TOKEN, CHROMA_DIR
+
+# Reuse a single store/embeddings client per process instead of rebuilding it
+# (and re-loading a local model) on every request.
+_store = None
+
 
 def get_chroma_store():
     """
-    Initialize Chroma vector store with Hugging Face embeddings
-    Using a free, high-quality sentence transformer model
+    Initialize a Chroma vector store backed by Hugging Face Inference API
+    embeddings. No local sentence-transformers/torch model is loaded.
     """
-    # Use a free, high-quality embedding model from Hugging Face
-    embeddings = HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2",  # Free, lightweight, and effective
-        model_kwargs={'device': 'cpu'},  # Force CPU for compatibility
-        encode_kwargs={'normalize_embeddings': True}  # Normalize for better similarity search
+    global _store
+    if _store is not None:
+        return _store
+
+    if not HF_TOKEN:
+        raise RuntimeError(
+            "HF_TOKEN is not set. Create a free token at "
+            "https://huggingface.co/settings/tokens and set HF_TOKEN in the "
+            "environment."
+        )
+
+    embeddings = HuggingFaceEndpointEmbeddings(
+        model=EMBED_MODEL,
+        huggingfacehub_api_token=HF_TOKEN,
     )
 
-    store = Chroma(
+    _store = Chroma(
         collection_name="meeting_chunks",
         embedding_function=embeddings,
-        persist_directory="chroma_db"
+        persist_directory=CHROMA_DIR,
     )
-
-    return store
+    return _store
